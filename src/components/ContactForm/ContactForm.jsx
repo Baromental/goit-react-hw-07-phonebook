@@ -1,54 +1,62 @@
-// ContactForm.jsx
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addContact, selectContacts } from '../redux/contactsSlice';
-import { filterContacts } from '../redux/filterSlice';
-import styles from './ContactForm.module.css';
+import { addContact } from '../articles/operations';
+import { selectContacts } from '../redux/contactsSlice';
+import s from './ContactForm.module.css';
 
 const ContactForm = () => {
-  const dispatch = useDispatch();
-  const contacts = useSelector(selectContacts);
-
   const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
+  const [phone, setPhone] = useState('');
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    name === 'name' ? setName(value) : setNumber(value);
-  };
+  const contacts = useSelector(selectContacts);
+  const isLoading = useSelector((state) => state.contacts.isLoading);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const dispatch = useDispatch();
 
-    const existingContact = contacts.find(contact => contact.name.toLowerCase() === name.toLowerCase());
-
-    if (existingContact) {
-      alert('Contact with this name already exists!');
-    } else {
-      dispatch(addContact({ name, number }));
-      dispatch(filterContacts(''));
-      resetForm();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'name') {
+      setName(value);
+    } else if (name === 'phone') {
+      setPhone(value);
     }
   };
 
-  const resetForm = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleAddContact(name, phone);
     setName('');
-    setNumber('');
+    setPhone('');
+  };
+
+  const handleAddContact = (name, phone) => {
+    const newContact = {
+      name: name.trim(),
+      phone: phone.trim(),
+    };
+    const isContactExist = contacts.some((contact) => contact.name === name);
+    if (isContactExist) {
+      alert(`${name} is already in contacts`);
+      return;
+    }
+    dispatch(addContact(newContact));
   };
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
-      <label className={styles.input}>
+    <form className={s.form} onSubmit={handleSubmit}>
+      <label className={s.input}>
         Name
         <input type="text" name="name" value={name} onChange={handleChange} required />
       </label>
 
-      <label className={styles.input}>
-        Number
-        <input type="tel" name="number" value={number} onChange={handleChange} required />
+      <label className={s.input}>
+        Phone
+        <input type="tel" name="phone" value={phone} onChange={handleChange} required />
       </label>
 
-      <button className={styles.button} type="submit">Add contact</button>
+      <button className={s.button} type="submit" disabled={isLoading}>
+        {isLoading ? 'Adding...' : 'Add contact'}
+      </button>
     </form>
   );
 };

@@ -1,45 +1,49 @@
 // contactsSlice.js
-import { createSlice, nanoid } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+import { addContact, deleteContact, fetchContacts } from '../articles/operations';
+
+const initialState = {
+  contacts: {
+    items: [],
+    isLoading: false,
+    error: null,
+  },
+};
 
 const contactsSlice = createSlice({
   name: 'contacts',
-  initialState: {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-   ],
-    filter: '',
+  initialState,
+  extraReducers: builder => {
+    builder
+      .addCase(fetchContacts.pending, state => {
+        state.contacts.isLoading = true;
+        state.contacts.error = null;
+      })
+      .addCase(fetchContacts.fulfilled, (state, { payload }) => {
+        state.contacts.items = payload;
+        state.contacts.isLoading = false;
+      })
+      .addCase(fetchContacts.rejected, (state, { payload }) => {
+        state.contacts.error = payload;
+        state.contacts.isLoading = false;
+      })
+      .addCase(addContact.fulfilled, (state, { payload }) => {
+        state.contacts.items.push(payload);
+      })
+      .addCase(deleteContact.fulfilled, (state, { payload }) => {
+        const index = state.contacts.items.findIndex(
+          contact => contact.id === payload
+        );
+        state.contacts.items.splice(index, 1);
+      });
   },
-  reducers: {
-    addContact: {
-     reducer(state, action) {
-        state.contacts.push(action.payload);
-      },
-      prepare(contact) {
-        return {
-          payload: {
-            ...contact,
-            id: nanoid(),
-          },
-        };
-      },
-    },
-    deleteContact: (state, action) => {
-      state.contacts = state.contacts.filter(contact => contact.id !== action.payload);
-    },
-    setFilter: (state, action) => {
-      state.filter = action.payload;
-    },
-    setContacts: (state, action) => {
-      state.contacts = action.payload;
-    },
+  selectors: {
+    selectContacts: state => state.contacts.items,
+    selectIsLoading: state => state.contacts.isLoading,
+    selectError: state => state.contacts.error,
   },
 });
 
-export const { addContact, deleteContact, setFilter, setContacts } = contactsSlice.actions;
-export const selectContacts = state => state.contacts.contacts;
-
-export default contactsSlice.reducer;
-
+export const contactsReducer = contactsSlice.reducer;
+export const { addContactSlice, deleteContactSlice } = contactsSlice.actions;
+export const { selectContacts, selectIsLoading, selectError } = contactsSlice.selectors;

@@ -1,21 +1,21 @@
 // Filter.jsx
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { filterContacts, selectFilter } from '../redux/filterSlice';
 import s from './Filter.module.css';
 
 const Filter = () => {
-  const dispatch = useDispatch();
   const filter = useSelector(selectFilter);
+  const dispatch = useDispatch();
 
   const handleChange = (event) => {
-    dispatch(filterContacts(event.target.value));
+    dispatch(filterContacts(event.target.value.toLowerCase().trim()));
   };
 
   return (
     <form>
       Find contacts by name
-      <input type="text" name="filterInput" value={filter} onChange={handleChange} className={s.input}/>
+      <input type="text" name="filter" value={filter} onChange={handleChange} className={s.input} />
     </form>
   );
 };
